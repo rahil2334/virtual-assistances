@@ -1,0 +1,45 @@
+!pip install SpeechRecognition
+!pip install chatterbot
+!pip install chatterbot_corpus
+
+import speech_recognition as sr
+from chatterbot import ChatBot
+from chatterbot.trainers import ChatterBotCorpusTrainer
+
+chatbot = ChatBot('Charlie')
+
+trainer = ChatterBotCorpusTrainer(chatbot)
+
+trainer.train("chatterbot.corpus.english")
+
+def recognize_speech():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening...")
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
+    
+    try:
+        text = recognizer.recognize_google(audio)
+        print("You said:", text)
+        return text
+    except sr.UnknownValueError:
+        print("Sorry, I could not understand the audio.")
+        return None
+    except sr.RequestError as e:
+        print(f"Could not request results; {e}")
+        return None
+
+def chatbot_response():
+    while True:
+        user_input = recognize_speech()
+        if user_input:
+            response = chatbot.get_response(user_input)
+            print("Assistant:", response)
+        
+        if user_input and user_input.lower() in ["exit", "quit", "bye"]:
+            print("Goodbye!")
+            break
+
+if __name__ == "__main__":
+    chatbot_response()
